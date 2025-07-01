@@ -3,7 +3,8 @@ from PIL import Image
 from PIL.ExifTags import TAGS
 import os
 
-TOKEN = "8107937727:AAEolVgpq4uz5ibqWEGkaVLXgrbYj3OS_AM"
+# Get bot token from environment variable
+TOKEN = os.getenv("BOT_TOKEN")
 
 def extract_exif(image_path):
     image = Image.open(image_path)
@@ -19,18 +20,8 @@ def extract_exif(image_path):
     return "\n".join(result)
 
 def handle_photo(update, context):
-    if update.message.photo:
-        # Image sent as normal photo
-        photo_file = update.message.photo[-1].get_file()
-        file_path = f"{photo_file.file_id}.jpg"
-    elif update.message.document and update.message.document.mime_type.startswith("image/"):
-        # Image sent as file
-        photo_file = update.message.document.get_file()
-        file_path = update.message.document.file_name
-    else:
-        update.message.reply_text("❌ Unsupported file type.")
-        return
-
+    photo_file = update.message.photo[-1].get_file()
+    file_path = f"{photo_file.file_id}.jpg"
     photo_file.download(file_path)
 
     try:
@@ -42,10 +33,13 @@ def handle_photo(update, context):
     os.remove(file_path)
 
 def start_bot():
+    if not TOKEN:
+        print("❌ BOT_TOKEN environment variable not set!")
+        return
+
     updater = Updater(TOKEN, use_context=True)
     dp = updater.dispatcher
-    # ✅ Handles both compressed photo and uncompressed image file
-    dp.add_handler(MessageHandler(Filters.photo | Filters.document.image, handle_photo))
+    dp.add_handler(MessageHandler(Filters.photo, handle_photo))
     updater.start_polling()
     print("🤖 Bot is running... Press Ctrl+C to stop.")
     updater.idle()
