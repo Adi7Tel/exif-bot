@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: exif-bot
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python exif_bot.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10
